@@ -3,7 +3,11 @@
         "file_password": "1234"
     },
     "Amazon": {
-        "login": "login",
+        "login": "user",
         "password": "1234"
+    },
+    "test": {
+        "login": "test",
+        "password": "+99#y+24C7we9)M1)"
     }
 }

@@ -92,7 +92,7 @@ class MainWindow:
         button_password = Button(new_password_frame, command=random_password, text="Generate password")
         button_password.grid(row=3, column=2, sticky="ew")
 
-        button_add = Button(new_password_frame,command=add_password, text="Add", width=36)
+        button_add = Button(new_password_frame, command=add_password, text="Add", width=36)
         button_add.grid(row=4, column=1, columnspan=2, sticky="ew")
 
     def load_all_passwords_frame(self):
@@ -172,6 +172,10 @@ class MainWindow:
 
     def app_restart(self):
         self.data_to_show.clear()
+        save_to_file = messagebox.askquestion(title="Save data to file?", message="Do you want to save current "
+                                                                                  "changes?")
+        if save_to_file:
+            self.data.save_file()
         self.clear_window()
         self.init_screen()
 

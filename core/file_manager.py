@@ -1,15 +1,11 @@
 import json
 
-STRUKTUCRE = {"initialization":
-                  {"file_password": "1234"},
-              "Amazon": {"login": "Michael11Pl",
-                         "password": "1234"}}
-
 
 class File:
 
     def __init__(self):
         self.default_password_file_location = "data.json"
+        self.all_loaded_data = None
         self.actual_file_password = ""
         self.all_passwords = {}
 
@@ -24,6 +20,7 @@ class File:
             with open(file_location, "r") as file_load:
                 loaded_data = json.load(file_load)
                 data_loader(loaded_data)
+                self.all_loaded_data = loaded_data
         except FileNotFoundError or AttributeError:
             with open("data.json", "r") as file_load:
                 loaded_data = json.load(file_load)
@@ -31,10 +28,12 @@ class File:
 
     def save_file(self):
         with open("data.json", "w") as file_save:
-            loaded_data = json.load(file_save)
             new_data = {"initialization": {"file_password": self.actual_file_password}}
             for key in list(self.all_passwords.keys()):
                 new_data[key] = self.all_passwords[key]
 
-            loaded_data.update(new_data)
+            self.all_loaded_data.update(new_data)
             json.dump(new_data, file_save, indent=4)
+
+    def create_new_file(self):
+        pass
