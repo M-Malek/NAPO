@@ -35,5 +35,17 @@ class File:
             self.all_loaded_data.update(new_data)
             json.dump(new_data, file_save, indent=4)
 
-    def create_new_file(self):
-        pass
+    def create_new_file(self, file_path):
+        try:
+            with open(file_path, "w") as file:
+                new_data = {"initialization": {"file_password": self.actual_file_password}}
+                json.dump(new_data, file, indent=4)
+        except AttributeError:
+            with open("data.json", "w") as file:
+                new_data = {"initialization": {"file_password": self.actual_file_password}}
+                json.dump(new_data, file, indent=4)
+
+
+#TODO 1: eliminate bug, when open file read file_path as Attribute Error and create new .json file
+#TODO 2: eliminate bug when password is not added to File() class
+#TODO 3: add AES

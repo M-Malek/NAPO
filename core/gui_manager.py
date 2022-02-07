@@ -4,13 +4,17 @@ from tkinter import messagebox
 from core.file_manager import *
 from core.password_manager import *
 import webbrowser
+import pyperclip
+from tkinter import simpledialog
 
 
 class MainWindow:
 
     def __init__(self):
         self.user_password_input = ""
+        self.new_file_location = None
         self.window = Tk()
+        self.password_entry_window = None
         self.window.title("NAPO v.1")
         self.window.config(width=200, height=400, padx=20, pady=20)
         self.window.resizable(False, False)
@@ -31,7 +35,7 @@ class MainWindow:
         button_new = Button(self.window, text="New", command=self.create_new_password_file, width=30)
         button_new.grid(row=1, column=0)
 
-        button_open = Button(self.window, text="Open", command=self.open_password_file, width=30)
+        button_open = Button(self.window, text="Open", command=lambda: self.open_password_file(mode="open"), width=30)
         button_open.grid(row=2, column=0)
 
         button_settings = Button(self.window, text="Author", command=self.author_screen, width=30)
@@ -40,14 +44,23 @@ class MainWindow:
         button_author = Button(self.window, text="Quit", command=self.window.destroy, width=30)
         button_author.grid(row=4, column=0)
 
-    @staticmethod
-    def create_new_password_file():
+    def create_new_password_file(self):
         data = File()
-        data.save_file()
+        file = tkinter.filedialog.asksaveasfilename(title="Enter file name and file location", defaultextension=".json",
+                                                    filetypes=[("JSON file", ".json")])
+        self.ask_user_file_password(mode="new")
+        data.actual_file_password = self.user_password_input
+        data.create_new_file(file)
+        self.new_file_location = file
+        self.open_password_file(mode="new")
 
-    def open_password_file(self):
+    def open_password_file(self, mode):
         self.data = File()
-        file_path = self.file_location_messagebox()
+        if mode == "open":
+            file_path = self.file_location_messagebox()
+        else:
+            file_path = self.new_file_location
+        self.ask_user_file_password(mode="open")
         self.data.load_file(file_path)
 
         self.clear_window()
@@ -105,6 +118,21 @@ class MainWindow:
             user_entry.insert(0, self.data.all_passwords[selected_web]["login"])
             password_entry.insert(0, self.data.all_passwords[selected_web]["password"])
 
+        def delete_website():
+            website_to_delete = website_entry.get()
+            self.data.all_passwords.pop(website_to_delete)
+            website_entry.delete(0, END)
+            user_entry.delete(0, END)
+            password_entry.delete(0, END)
+            listbox_websites.delete(0, END)
+            reload_websites = list(self.data.all_passwords.keys())
+            for new_item in all_websites:
+                listbox_websites.insert(reload_websites.index(new_item), new_item)
+
+        def copy_password():
+            selected_web = listbox_websites.get(listbox_websites.curselection())
+            pyperclip.copy(self.data.all_passwords[selected_web]["password"])
+
         frame_all_passwords = LabelFrame(self.window, text="All saved passwords")
         frame_all_passwords.grid(row=0, column=3, sticky="n", rowspan=2)
 
@@ -133,10 +161,10 @@ class MainWindow:
         password_entry = Entry(frame_password_data, show="*", width=22)
         password_entry.grid(row=3, column=5)
 
-        button_copy = Button(frame_password_data, text="Copy password to clipboard", width=22)
+        button_copy = Button(frame_password_data, text="Copy password to clipboard", command=copy_password, width=22)
         button_copy.grid(row=4, column=5)
 
-        button_delete = Button(frame_password_data, text="Delete website from list", width=22)
+        button_delete = Button(frame_password_data, text="Delete website from list", command=delete_website, width=22)
         button_delete.grid(row=5, column=5)
 
     def settings_frame(self):
@@ -146,25 +174,31 @@ class MainWindow:
         button_back = Button(frame_settings, text="Back", command=self.app_restart, width=20)
         button_back.grid(row=1, column=0, columnspan=3, sticky="ew")
 
-    @staticmethod
-    def ask_user_file_password():
-        def test():
-            print(password_window_entry.get())
-            password_window.destroy()
+    def ask_user_file_password(self, mode):
+        # def quit_window():
+        #     self.user_password_input = password_window_entry.get()
+        #     print(self.user_password_input)
+        #     self.password_entry_window.destroy()
 
-        password_window = Tk()
-        password_window.config(width=50, height=40)
-        password_window.title("Password required")
-        password_window_label = Label(text="Please, enter password to your password's data file:")
-        password_window_label.grid(row=0, column=0)
+        if mode == "new":
+            message = "Please, enter new password for your file:"
+        else:
+            message = "Please, enter password to your password's data file:"
 
-        password_window_entry = Entry(width=40, show="*")
-        password_window_entry.grid(row=0, column=1)
-
-        password_window_button = Button(text="Submit password", command=test, width=70)
-        password_window_button.grid(row=1, column=0, columnspan=2)
-
-        password_window.mainloop()
+        self.password_entry_window = tkinter.simpledialog.askstring("Enter a password", message, show="*")
+        # self.password_entry_window = Toplevel(self.window)
+        # self.password_entry_window.config(width=50, height=40)
+        # self.password_entry_window.title("Password required")
+        # password_window_label = Label(self.password_entry_window, text=message)
+        # password_window_label.grid(row=0, column=0)
+        #
+        # password_window_entry = Entry(self.password_entry_window, width=40, show="*")
+        # password_window_entry.grid(row=0, column=1)
+        #
+        # password_window_button = Button(self.password_entry_window, text="Submit password", command=quit_window, width=70)
+        # password_window_button.grid(row=1, column=0, columnspan=2)
+        #
+        # self.password_entry_window.mainloop()
 
     def clear_window(self):
         for widget in self.window.winfo_children():
@@ -200,8 +234,10 @@ class MainWindow:
         button_back = Button(self.window, text="Back", command=self.app_restart)
         button_back.grid(row=3, column=0, sticky="ew")
 
+    def quit_program(self):
+        self.destroy()
+
     @staticmethod
     def file_location_messagebox():
         file = tkinter.filedialog.askopenfilename(title="Choose your data file")
         return file
-
