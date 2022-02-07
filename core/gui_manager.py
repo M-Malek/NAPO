@@ -13,6 +13,7 @@ class MainWindow:
     def __init__(self):
         self.user_password_input = ""
         self.new_file_location = None
+        self.file_path = None
         self.window = Tk()
         self.password_entry_window = None
         self.window.title("NAPO v.1")
@@ -45,23 +46,26 @@ class MainWindow:
         button_author.grid(row=4, column=0)
 
     def create_new_password_file(self):
-        data = File()
+        self.data = File()
         file = tkinter.filedialog.asksaveasfilename(title="Enter file name and file location", defaultextension=".json",
                                                     filetypes=[("JSON file", ".json")])
         self.ask_user_file_password(mode="new")
-        data.actual_file_password = self.user_password_input
-        data.create_new_file(file)
+        self.data.actual_file_password = self.user_password_input
+        self.data.create_new_file(file)
         self.new_file_location = file
+        # self.data.save_file()
         self.open_password_file(mode="new")
 
     def open_password_file(self, mode):
         self.data = File()
         if mode == "open":
-            file_path = self.file_location_messagebox()
+            self.file_path = self.file_location_messagebox()
         else:
-            file_path = self.new_file_location
-        self.ask_user_file_password(mode="open")
-        self.data.load_file(file_path)
+            self.file_path = self.new_file_location
+        if mode != "new":
+            self.ask_user_file_password(mode="open")
+        self.data.load_file(self.file_path)
+        # self.data.actual_file_password = self.user_password_input
 
         self.clear_window()
         self.save_new_password_frame()
@@ -175,42 +179,25 @@ class MainWindow:
         button_back.grid(row=1, column=0, columnspan=3, sticky="ew")
 
     def ask_user_file_password(self, mode):
-        # def quit_window():
-        #     self.user_password_input = password_window_entry.get()
-        #     print(self.user_password_input)
-        #     self.password_entry_window.destroy()
-
         if mode == "new":
             message = "Please, enter new password for your file:"
         else:
             message = "Please, enter password to your password's data file:"
 
-        self.password_entry_window = tkinter.simpledialog.askstring("Enter a password", message, show="*")
-        # self.password_entry_window = Toplevel(self.window)
-        # self.password_entry_window.config(width=50, height=40)
-        # self.password_entry_window.title("Password required")
-        # password_window_label = Label(self.password_entry_window, text=message)
-        # password_window_label.grid(row=0, column=0)
-        #
-        # password_window_entry = Entry(self.password_entry_window, width=40, show="*")
-        # password_window_entry.grid(row=0, column=1)
-        #
-        # password_window_button = Button(self.password_entry_window, text="Submit password", command=quit_window, width=70)
-        # password_window_button.grid(row=1, column=0, columnspan=2)
-        #
-        # self.password_entry_window.mainloop()
+        password = tkinter.simpledialog.askstring("Enter a password", message, show="*")
+        self.user_password_input = password
 
     def clear_window(self):
         for widget in self.window.winfo_children():
             widget.destroy()
 
     def app_restart(self):
-        self.data_to_show.clear()
         save_to_file = messagebox.askquestion(title="Save data to file?", message="Do you want to save current "
                                                                                   "changes?")
         if save_to_file:
-            self.data.save_file()
+            self.data.save_file(self.file_path)
         self.clear_window()
+        self.data_to_show.clear()
         self.init_screen()
 
     def author_screen(self):
